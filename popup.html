@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Apple Find</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        width: 720px;
+        height: 720px;
+        margin: 0;
+        padding: 16px;
+        overflow: auto;
+      }
+      #capture-btn {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+      }
+      #view-controls {
+        display: flex;
+        margin-top: 8px;
+        gap: 10px;
+      }
+      .view-btn {
+        flex: 1;
+        padding: 8px;
+        cursor: pointer;
+        background: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .view-btn.active {
+        background: #007bff;
+        color: white;
+      }
+      #result {
+        margin-top: 16px;
+      }
+      .canvas-container {
+        position: relative;
+        margin-top: 8px;
+      }
+      #canvas-original,
+      #canvas-result {
+        max-width: 100%;
+        height: auto;
+        border: 1px solid #ccc;
+      }
+      .canvas-label {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="capture-btn">현재 화면 캡쳐 및 분석</button>
+
+    <div id="view-controls">
+      <button class="view-btn active" id="btn-original">원본 이미지</button>
+      <button class="view-btn" id="btn-result">인식 결과</button>
+      <button class="view-btn" id="btn-side-by-side">함께 보기</button>
+    </div>
+
+    <div id="canvas-container" class="canvas-container">
+      <canvas
+        id="canvas-original"
+        width="960"
+        height="540"
+        style="display: block"
+      ></canvas>
+      <div class="canvas-label">원본 이미지</div>
+    </div>
+
+    <div id="result-container" class="canvas-container" style="display: none">
+      <canvas
+        id="canvas-result"
+        width="960"
+        height="540"
+        style="display: block"
+      ></canvas>
+      <div class="canvas-label">인식 결과</div>
+    </div>
+
+    <div id="side-by-side-container" style="display: none">
+      <div style="display: flex; gap: 10px">
+        <div class="canvas-container" style="width: 50%">
+          <canvas
+            id="canvas-original-small"
+            width="450"
+            height="270"
+            style="display: block; width: 100%"
+          ></canvas>
+          <div class="canvas-label">원본 이미지</div>
+        </div>
+        <div class="canvas-container" style="width: 50%">
+          <canvas
+            id="canvas-result-small"
+            width="450"
+            height="270"
+            style="display: block; width: 100%"
+          ></canvas>
+          <div class="canvas-label">인식 결과</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="result"></div>
+    <div
+      id="numbers-grid"
+      style="margin-top: 16px; font-family: monospace"
+    ></div>
+    <script src="popup.js"></script>
+  </body>
+</html>

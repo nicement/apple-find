@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Apple Find",
+  "version": "1.0.0",
+  "description": "화면을 캡쳐하고, 사과 안의 숫자를 인식하여 합이 10인 인접 조합을 찾아 강조하는 확장프로그램.",
+  "permissions": ["activeTab", "scripting", "storage", "tabs"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
