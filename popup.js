@@ -1,37 +1,4 @@
-// 두 숫자 객체가 인접해 있는지 확인하는 함수 - 개선된 버전
-function isAdjacent(a, b) {
-  // 기본 임계값
-  const threshold = 60; // 인접성 판단을 위한 거리 임계값 (증가됨)
-
-  // 두 숫자 중심점 계산
-  const ax = (a.bbox.x0 + a.bbox.x1) / 2;
-  const ay = (a.bbox.y0 + a.bbox.y1) / 2;
-  const bx = (b.bbox.x0 + b.bbox.x1) / 2;
-  const by = (b.bbox.y0 + b.bbox.y1) / 2;
-
-  // 맨해튼 거리와 유클리드 거리를 모두 계산
-  const manhattanDist = Math.abs(ax - bx) + Math.abs(ay - by);
-  const euclideanDist = Math.sqrt((ax - bx) ** 2 + (ay - by) ** 2);
-
-  // 두 거리 모두 임계값 이내이면 인접으로 간주
-  return euclideanDist < threshold || manhattanDist < threshold * 1.5;
-}
-
-// 숫자 배열에서 합이 10인 인접 조합을 찾는 함수
-function findCombinations(numbers) {
-  const result = [];
-  for (let i = 0; i < numbers.length; i++) {
-    for (let j = i + 1; j < numbers.length; j++) {
-      if (
-        isAdjacent(numbers[i], numbers[j]) &&
-        numbers[i].value + numbers[j].value === 10
-      ) {
-        result.push([numbers[i], numbers[j]]);
-      }
-    }
-  }
-  return result;
-}
+// Functions isAdjacent and findCombinations are now in combination_logic.js
 
 // 이미지에서 빨간 사과와 흰색 숫자를 찾는 함수
 async function processImage(dataUrl) {
@@ -614,6 +581,18 @@ function createNormalizedGrid(pixels, width, height) {
   return grid;
 }
 
+// Predefined colors for highlighting combinations
+const C_COLORS = [
+  "rgba(255, 165, 0, 0.7)", // Orange
+  "rgba(0, 255, 255, 0.7)",    // Cyan
+  "rgba(128, 0, 128, 0.7)", // Purple
+  "rgba(255, 255, 0, 0.7)", // Yellow
+  "rgba(0, 128, 0, 0.7)",   // Green
+  "rgba(255, 192, 203, 0.7)", // Pink
+  "rgba(0, 0, 255, 0.7)",   // Blue
+  "rgba(255, 0, 0, 0.7)", // Red (distinct from apple stroke)
+];
+
 // 사과 영역과 인식된 숫자를 캔버스에 시각적으로 표시
 function visualizeResults(canvas, ctx, apples, numbers, combos) {
   // 캔버스 초기화
@@ -621,12 +600,12 @@ function visualizeResults(canvas, ctx, apples, numbers, combos) {
 
   // 원본 이미지 위에 사과 영역 표시
   apples.forEach((apple, index) => {
-    ctx.strokeStyle = "rgba(255, 0, 0, 0.7)";
+    ctx.strokeStyle = "rgba(220, 20, 60, 0.7)"; // Crimson red for apples, to differentiate from combo red
     ctx.lineWidth = 2;
     ctx.strokeRect(apple.x, apple.y, apple.width, apple.height);
 
     // 사과 인덱스 표시
-    ctx.fillStyle = "rgba(255, 0, 0, 0.9)";
+    ctx.fillStyle = "rgba(220, 20, 60, 0.9)";
     ctx.font = "12px Arial";
     ctx.fillText(`사과#${index}`, apple.x, apple.y - 5);
   });
@@ -634,31 +613,30 @@ function visualizeResults(canvas, ctx, apples, numbers, combos) {
   // 인식된 숫자 표시
   numbers.forEach((number) => {
     const { x0, y0, x1, y1 } = number.bbox;
-    ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.7)"; // White background for numbers
     ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
 
-    ctx.fillStyle = "rgba(0, 0, 255, 1)";
+    ctx.fillStyle = "rgba(0, 0, 0, 1)"; // Black text for numbers for better contrast
     ctx.font = "16px Arial";
-    ctx.fillText(number.value, (x0 + x1) / 2 - 5, (y0 + y1) / 2 + 5);
+    const textX = x0 + (x1 - x0) / 2 - (ctx.measureText(number.value.toString()).width / 2);
+    const textY = y0 + (y1 - y0) / 2 + 5; // Adjust for font baseline
+    ctx.fillText(number.value, textX, textY);
   });
 
   // 합이 10인 조합 강조 표시
-  combos.forEach((combo) => {
-    const [num1, num2] = combo;
-    ctx.strokeStyle = "rgba(0, 255, 0, 0.7)";
+  combos.forEach((combo, index) => {
+    const color = C_COLORS[index % C_COLORS.length]; // Cycle through colors
+    ctx.strokeStyle = color;
     ctx.lineWidth = 3;
-    ctx.strokeRect(
-      num1.bbox.x0,
-      num1.bbox.y0,
-      num1.bbox.x1 - num1.bbox.x0,
-      num1.bbox.y1 - num1.bbox.y0
-    );
-    ctx.strokeRect(
-      num2.bbox.x0,
-      num2.bbox.y0,
-      num2.bbox.x1 - num2.bbox.x0,
-      num2.bbox.y1 - num2.bbox.y0
-    );
+    
+    combo.forEach(num => { // Iterate through each number in the combo
+      ctx.strokeRect(
+        num.bbox.x0,
+        num.bbox.y0,
+        num.bbox.x1 - num.bbox.x0,
+        num.bbox.y1 - num.bbox.y0
+      );
+    });
   });
 
   // 캔버스를 표시
@@ -845,6 +823,15 @@ document.getElementById("capture-btn").addEventListener("click", async () => {
       resultDiv.innerText = "숫자 조합 분석 중...";
       const combos = findCombinations(numbers);
 
+      // Prepare data for content.js
+      const combosWithColors = combos.map((combo, index) => {
+        return {
+          id: `combo-${index}`, // Unique ID for the combination
+          numbers: combo.map(num => num.bbox), // Send only bboxes to content.js
+          color: C_COLORS[index % C_COLORS.length] // Defined in popup.js
+        };
+      });
+
       // content.js에 강조 요청 메시지 전송 (예외처리 추가)
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs[0];
@@ -861,7 +848,7 @@ document.getElementById("capture-btn").addEventListener("click", async () => {
         }
         chrome.tabs.sendMessage(
           tab.id,
-          { type: "highlight", combos },
+          { type: "highlight", combos: combosWithColors },
           (response) => {
             if (chrome.runtime.lastError) {
               alert("이 페이지에서는 강조 기능을 사용할 수 없습니다.");
